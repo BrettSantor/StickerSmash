@@ -5,7 +5,7 @@ export default function customImageViewer({placeholderImageSource, selectedImage
 const imageSource = selectedImage ? {uri: selectedImage} : placeholderImageSource;
 
     return (
-        <Image source={imageSource.uri} style ={styles.image}/>
+        <Image source={imageSource} style ={styles.image}/>
     );
 }
 
