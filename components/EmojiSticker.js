@@ -9,6 +9,7 @@ import {
   Gesture,
   GestureDetector,
   TapGestureHandler,
+  PanGestureHandler
 } from "react-native-gesture-handler";
 import { useContext } from "react";
 
@@ -20,20 +21,38 @@ export default function EmojiSticker({ imageSize, stickerSource }) {
   const translateY = useSharedValue(0);
   const pressed = useSharedValue(false);
 
-  const scaleImage = useSharedValue(imageSize);
+  const scaleImage = useSharedValue(1);
 
-  const onDoubleTap = useAnimatedGestureHandler({
-    onActive: () => {
-      if (scaleImage.value !== imageSize * 2) {
-        scaleImage.value = scaleImage.value * 2;
+  // const onDoubleTap = useAnimatedGestureHandler({
+  //   onActive: () => {
+  //     console.log("push me")
+  //     if (!pressed.value) {
+  //       if (scaleImage.value !== 2) {
+  //         scaleImage.value = withSpring(2);
+  //       } else {
+  //         scaleImage.value = withSpring(1);
+  //       }
+  //     }
+  //   },
+  // });
+
+  const doubleTap = Gesture.Tap()
+  .maxDuration(250)
+  .numberOfTaps(2)
+  .onStart(() => {
+    console.log("push me")
+    if (!pressed.value) {
+      if (scaleImage.value !== 2) {
+        scaleImage.value = withSpring(2);
+      } else {
+        scaleImage.value = withSpring(1);
       }
-    },
+    }
   });
 
   const imageStyle = useAnimatedStyle(() => {
     return {
-      width: withSpring(scaleImage.value),
-      height: withSpring(scaleImage.value),
+      transform: [{ scale: scaleImage.value }],
     };
   });
 
@@ -50,30 +69,46 @@ export default function EmojiSticker({ imageSize, stickerSource }) {
     };
   });
 
+  // const onGestureEvent = useAnimatedGestureHandler({
+  //   onStart: (_, context) => {
+  //     context.translateX = translateX.value;
+  //     context.translateY = translateY.value;
+  //     pressed.value = true;
+  //   },
+  //   onActive: (event, context) => {
+  //     translateX.value = event.translationX + context.translateX;
+  //     translateY.value = event.translationY + context.translateY;
+  //   },
+  //   onEnd: () => {
+  //     pressed.value = false;
+  //   },
+  // });
+
   const pan = Gesture.Pan()
-    .onBegin(()=>{
+    .onBegin((event)=>{
         console.log("this is start", translateX.value, translateY.value)
         pressed.value = true;
     })
-    .onChange(()=>{
+    .onChange((event)=>{
         console.log("Active!!!", event.x, event.y)
         translateX.value = event.x;
         translateY.value = event.y;
     })
     .onFinalize(()=>{
+      console.log("this is onFinalize")
         pressed.value = false;
     })
 
   return (
-    <GestureDetector gesture={pan}>
+    <GestureDetector gesture={Gesture.Exclusive(pan, doubleTap)}>
       <AnimatedView style={[containerStyle, { top: -350 }]}>
-        <TapGestureHandler onGestureEvent={onDoubleTap} numberOfTaps={2}>
+        {/* <TapGestureHandler onGestureEvent={onDoubleTap} numberOfTaps={2}> */}
           <AnimatedImage
             source={stickerSource}
             resizeMode="contain"
             style={[imageStyle, { width: imageSize, height: imageSize }]}
           />
-        </TapGestureHandler>
+        {/* </TapGestureHandler> */}
       </AnimatedView>
     </GestureDetector>
   );
